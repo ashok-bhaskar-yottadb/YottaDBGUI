@@ -80,8 +80,10 @@ sendmsg(msg)
 	;
 	; Send a msg to the log manager, maximum of 450 characters.
 	;
+        ;do ^sstep ;AKB 2018-02-13 DEBUG- remove
 	new cnt
 	tstart ():serial
+        if '$data(@TMP@("DataBallet","log","count")) set @TMP@("DataBallet","log","count")=0 ;2018-02-13 AKB set default value to deal with changing TMP from global to local
 	set (cnt,@TMP@("DataBallet","log","count"))=@TMP@("DataBallet","log","count")+1
 	tcommit
 	set @TMP@("DataBallet","log","msg",cnt)=$zextract(msg,1,450)

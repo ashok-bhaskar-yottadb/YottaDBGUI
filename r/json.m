@@ -16,6 +16,8 @@
 	; along with DataBallet. If not, see <http://www.gnu.org/licenses/>.
 	;
 
+;note AKB 12/26 - this doesn't appear to be called anywhere in DataBallet. Does it even work?
+;using it for local variables instead - seems to work okay
 encode(glo)
 	;
 	; Return a JSON representation for the supplied global

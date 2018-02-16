@@ -18,6 +18,8 @@
 # along with DataBallet. If not, see <http://www.gnu.org/licenses/>.
 #
 
+#set -x
+
 if [ "$2" != "" ] ; then
 	configfile="$2"
 else
@@ -47,6 +49,7 @@ function start() {
 	if [ "0" = "$status" ] ; then
 		echo "$progname is already running."
 	else
+                echo "pid is $pid"
 		rm -f $pid
 		echo "Starting $progname at " `date` " using $configfile." >> $log
 		$gtm_dist/mupip rundown -r '*' >> $log 2>&1

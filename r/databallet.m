@@ -103,6 +103,9 @@ start()
  ;
  ; Start the HTTP server.
  ;
+ v "YLCT":0:1:0          ; sets local variable alternate collation = 0, null collation = 1, numeric collation = 0 ;2018-02-08 AKB - COPIED OVER FROM GDE.m DEBUG VER TO WORK WITH DUMPING GDE LOCALS TO GLOBALS - REMOVE LATER
+ do ^sstep ;DEBUG -remove
+ if $ZJOBEXAM()
  set $ZTRAP="do errhandler^databallet"
  new conf
  do conf
@@ -125,16 +128,21 @@ listen(port,debug)
  ;
  ; Listen on a particular socket for incomming connection
  ;
+ do ^sstep ;DEBUG - remove
+ ;if $ZJOBEXAM() ;DEBUG - remove
  set $ZTRAP="do errhandler^databallet"
  new conf
  do conf
  new socket,handle,p,socketfd
  set socket="databallet"
  open socket:(ZLISTEN=conf("listenon",port)_":TCP":znoff:zdelay:zbfsize=2048:zibfsize=2048:attach="databallet"):30:"SOCKET"
+ if $ZJOBEXAM() ;DEBUG remove - trying to find out when and why $ZGBLDIR switches
  use socket
+ if $ZJOBEXAM() ;DEBUG remove - trying to find out when and why $ZGBLDIR switches - does this line ever get hit? seems to go right to serve+4
  write /listen(5)
  ;
  for  do  quit:$data(@TMP@("DataBallet","quit"))
+ . if $ZJOBEXAM() ;DEBUG remove - does this line get hit?
  . for  write /wait(1)  quit:$key'=""  quit:$data(@TMP@("DataBallet","quit"))
  . quit:$data(@TMP@("DataBallet","quit"))
  . if +$piece($zversion,"GT.M V",2)'<6.1,$piece($key,"|")="CONNECT" do
@@ -162,6 +170,7 @@ serve(isTLS)
  ;
  ; Serve web page(s) to a connected client.
  ;
+ ;if $ZJOBEXAM() ;DEBUG remove - trying to find out when and why $ZGBLDIR switches
  set $ZTRAP="do errhandler^databallet"
  new io s io=$g(socket,$principal)
  if isTLS do
@@ -224,6 +233,9 @@ servesinglereq(line)
  ;
  ; Serve a single HTTP/1.0 or HTTP/1.1 request.
  ;
+
+ ;if $ZJOBEXAM() ;DEBUG remove
+ do ^sstep ;DEBUG remove
  new request,response,length
 
  ; Extract method
