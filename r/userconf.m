@@ -9,11 +9,11 @@ userconf;
 	; Default document name
 	set conf("index")="index.html"
 	; Error log file
-	set conf("errorlog")="/tmp/fis-gtm/V6.3-002_x86_64/databallet_error.log"
+	set conf("errorlog")="/tmp/fis-gtm/R110/dbg/databallet_error.log"
 	; Common Log Format file
-	set conf("log")="/tmp/fis-gtm/V6.3-002_x86_64/databallet_access.log"
+	set conf("log")="/tmp/fis-gtm/R110/dbg/databallet_access.log"
 	; Extended Log Format file
-	set conf("extlog")="/tmp/fis-gtm/V6.3-002_x86_64/databallet_extended.log"
+	set conf("extlog")="/tmp/fis-gtm/R110/dbg/databallet_extended.log"
 	;
 	; Globals configuration
 	;
@@ -24,7 +24,7 @@ userconf;
 	; Routing configuration
 	;
 	; Default document root, with static file serving.
-	set conf("routing","*","/")="do handle^static(""/home/gtmuser/DataBallet-master/web/"")"
+	set conf("routing","*","/")="do handle^static(""/home/ashok/Documents/gde-gui/DataBallet/web/"")" ;2018-02-16 AKB: TODO use /home/ashok/Documents/gde-gui/DataBallet/web instead?
         set conf("routing","*","/post")="do handle^mypost()"
         set conf("routing","*","/getmap")="do handle^getmap()"
         set conf("routing","*","/verify")="do handle^verify()"

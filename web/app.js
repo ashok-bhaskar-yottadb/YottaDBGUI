@@ -727,3 +727,4 @@ click node for info prompt, with "delete" button inside, and also "connect to re
 //check out Sam's web server code
 
 //TODO copy VM to orval once, set up password-less rsync cron job
+//TODO remove r/userconf.m from git repo
