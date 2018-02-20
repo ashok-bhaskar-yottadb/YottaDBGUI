@@ -39,7 +39,7 @@ DBG:	;transfer point for DEBUG and "runtime" %gde
 	;i 1=+$get(dump) zwrite  halt
 	;i 1=+$get(dump) kill ^nams,^regs,^segs,^tmpacc,^tmpreg,^tmpseg,^minreg,^maxreg,^minseg,^maxseg merge ^nams=nams,^regs=regs,^segs=segs,^tmpacc=tmpacc,^tmpreg=tmpreg,^tmpseg=tmpseg,^minreg=minreg,^maxreg=maxreg,^minseg=minseg,^maxseg=maxseg halt
 	;i 1=+$get(dump) merge ^nams=nams,^regs=regs,^segs=segs,^tmpacc=tmpacc,^tmpreg=tmpreg,^tmpseg=tmpseg,^minreg=minreg,^maxreg=maxreg,^minseg=minseg,^maxseg=maxseg quit
-	i 1=+$get(dump) do  
+	i 1=+$get(dump) do  quit
         .kill getMapData
         .merge getMapData("nams")=nams
         .merge getMapData("regs")=regs
@@ -51,7 +51,6 @@ DBG:	;transfer point for DEBUG and "runtime" %gde
         .merge getMapData("maxreg")=maxreg
         .merge getMapData("minseg")=minseg
         .merge getMapData("maxseg")=maxseg
-        .quit  
 	i debug s prompt="DEBUGDE>",uself="logfile"
 	e  s prompt="GDE>",uself="logfile:(ctrap=$c(3,25,26):exception=""d CTRL^GDE"")"
 	e  s useio="io:(ctrap=$c(3,25,26):exception=""d CTRL^GDE"")"
@@ -131,7 +130,7 @@ DEBUG	;entry point to debug gde
 	n  ; clear calling process M variable state (if any) so it does not interfere with GDE variable names
 	s allerrs=0,debug=1,runtime=0 u 0:(ctrap="":exception="") zb DBGCOMX,ABORT
 	g DBG
-DUMP	;entry point to dump gde
-	n  ; clear calling process M variable state (if any) so it does not interfere with GDE variable names
+DUMP(getMapData)	;entry point to dump gde
+	n (getMapData) ; clear calling process M variable state (if any) so it does not interfere with GDE variable names - exclude var getMapData
 	s allerrs=0,debug=1,dump=1,runtime=0 u 0:(ctrap="":exception="") zb DBGCOMX,ABORT
 	g DBG

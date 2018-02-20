@@ -217,7 +217,7 @@ window.onload = function() {
         toastr.error("Region " + linkTargetLabel + " does not exist");
         return;
       }
-      if (regionLabelEquality(model.nams[thisNodeLabel], linkTargetLabel)) {
+      if (regionLabelEqual(model.nams[thisNodeLabel], linkTargetLabel)) {
         $("#changelink-dialog").dialog('close');
         return;
       }
@@ -728,4 +728,5 @@ click node for info prompt, with "delete" button inside, and also "connect to re
 
 //TODO copy VM to orval once, set up password-less rsync cron job
 //TODO remove r/userconf.m from git repo
-//TODO debug-dump gde routine isn't yet on nars
+//
+//TODOs: clean stop, accept only one connection, template modification (JS side), save/verify, changes to GDE - where do they get saved?

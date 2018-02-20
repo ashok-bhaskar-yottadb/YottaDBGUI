@@ -47,10 +47,10 @@ handle()
   ;merge responseObj("maxreg")=^maxreg
   ;merge responseObj("minseg")=^minseg
   ;merge responseObj("maxseg")=^maxseg
-  if $ZJOBEXAM() ;DEBUG - remove
-  do DUMP^GDE
-  if $ZJOBEXAM() ;DEBUG - remove
-  merge responseObj=getMapData
+  ;if $ZJOBEXAM() ;DEBUG - remove
+  do DUMP^GDE(.responseObj)
+  ;if $ZJOBEXAM() ;DEBUG - remove
+  ;merge responseObj=getMapData
   set responseStr=$$encode^json("responseObj")
   
   ;set ^ashokvar("data")=responseStr ;debug - remove this
