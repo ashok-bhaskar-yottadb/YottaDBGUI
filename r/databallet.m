@@ -105,7 +105,7 @@ start()
  ;
  v "YLCT":0:1:0          ; sets local variable alternate collation = 0, null collation = 1, numeric collation = 0 ;2018-02-08 AKB - COPIED OVER FROM GDE.m DEBUG VER TO WORK WITH DUMPING GDE LOCALS TO GLOBALS - REMOVE LATER
  do ^sstep ;DEBUG -remove
- if $ZJOBEXAM()
+ ;if $ZJOBEXAM() ;DEBUG -remove
  set $ZTRAP="do errhandler^databallet"
  new conf
  do conf
@@ -136,30 +136,41 @@ listen(port,debug)
  new socket,handle,p,socketfd
  set socket="databallet"
  open socket:(ZLISTEN=conf("listenon",port)_":TCP":znoff:zdelay:zbfsize=2048:zibfsize=2048:attach="databallet"):30:"SOCKET"
- if $ZJOBEXAM() ;DEBUG remove - trying to find out when and why $ZGBLDIR switches
+ ;if $ZJOBEXAM() ;DEBUG remove - trying to find out when and why $ZGBLDIR switches (haven't seen this happen yet on nars, might appear if I switch glds in the .conf)
  use socket
- if $ZJOBEXAM() ;DEBUG remove - trying to find out when and why $ZGBLDIR switches - does this line ever get hit? seems to go right to serve+4
+ ;if $ZJOBEXAM() ;DEBUG remove - trying to find out when and why $ZGBLDIR switches
+	 ;2018-02 AKB - was able to reach this line - I think failure to reach it earlier was due to stop script not properly stopping processes 
+	 ;is it possible that the stop script does kill the start^databallet process (via mupip stop) but fails to kill the jobbed off processes? I think that's the case - is that indeed where the other processes I see in ps are coming from, and why don't they halt themselves?
  write /listen(5)
  ;
  for  do  quit:$data(@TMP@("DataBallet","quit"))
- . if $ZJOBEXAM() ;DEBUG remove - does this line get hit?
+ . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? - yes, after kill -9'ing all mumps processes before restarting the server
  . for  write /wait(1)  quit:$key'=""  quit:$data(@TMP@("DataBallet","quit"))
+ . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? - yes
  . quit:$data(@TMP@("DataBallet","quit"))
+ . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? -yes
  . if +$piece($zversion,"GT.M V",2)'<6.1,$piece($key,"|")="CONNECT" do
+ . . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? -yes
  . . set childSocket=$piece($key,"|",2)
+ . . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? -yes
  . . use socket:(detach=childSocket)
+ . . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? -yes
  . . new q set q=""""
  . . new arg set arg=q_"SOCKET:"_childSocket_q
  . . new isTLS set isTLS=port="https"
  . . new jobarg set jobarg="serve(isTLS):(input="_arg_":output="_arg_":error="_q_conf("errorlog")_".fork"_q_")"
  . . if $g(debug) do 
+ . . . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? -no
  . . . use socket:(attach=childSocket)
+ . . . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? -no
  . . . do serve(isTLS)
  . . else  job @jobarg
  . ;
  . ; Old way. Job off a new server, serve this request, and then stop.
  . if +$piece($zversion,"GT.M V",2)<6.1,$piece($key,"|")="CONNECT" do
+ . . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? -no
  . . use socket:(socket=$piece($key,"|",2))
+ . . ;if $ZJOBEXAM() ;DEBUG remove - does this line get hit? -no
  . . close socket:(socket="server")
  . . job listen^databallet(port):(input="/dev/null":output="/dev/null":error="/dev/null")
  . . do serve(isTLS)
@@ -171,6 +182,7 @@ serve(isTLS)
  ; Serve web page(s) to a connected client.
  ;
  ;if $ZJOBEXAM() ;DEBUG remove - trying to find out when and why $ZGBLDIR switches
+ do ^sstep
  set $ZTRAP="do errhandler^databallet"
  new io s io=$g(socket,$principal)
  if isTLS do
@@ -281,6 +293,8 @@ errhandler()
  ;
  ; Error handler in case something bad happens. Will print some debug information to the log file and halt.
  ;
+
+ ;2018-02 AKB does this affect @TMP (=TMPLOCAL) and other locals?
 
  set $ztrap="halt"
  new file,old

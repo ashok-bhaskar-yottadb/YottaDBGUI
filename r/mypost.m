@@ -13,7 +13,7 @@ handle()
   
   ; This is actually where you do processing, like creating a GDE file
 
-  if $ZJOBEXAM()
+  ;if $ZJOBEXAM()
 
   ;merge ^sam=push
 

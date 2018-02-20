@@ -728,3 +728,4 @@ click node for info prompt, with "delete" button inside, and also "connect to re
 
 //TODO copy VM to orval once, set up password-less rsync cron job
 //TODO remove r/userconf.m from git repo
+//TODO debug-dump gde routine isn't yet on nars

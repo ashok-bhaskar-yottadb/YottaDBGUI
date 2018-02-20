@@ -59,6 +59,7 @@ function start() {
 }
 
 function stop() {
+	#set -x
 	echo "Stoping $progname."
 	checkpid
 	if [ "0" = "$status" ] ; then
@@ -66,13 +67,15 @@ function stop() {
 		$gtm_dist/mumps -run %XCMD 'do userconf^userconf set @TMP@("DataBallet","quit")=1'
 		count=0
 		checkpid
-		while [ "0" = "$status" -a $count -lt 10 ]
+		while [ "0" = "$status" -a $count -lt 7 ]
 		do
 			sleep 1
 			count=$(($count + 1))
 			checkpid
 		done
 		# If still alive, force the process to stop
+		# 2018-02 AKB - this following part doesn't seem to work - server still responds to requests
+		# does @TMP get thrown out & replaced or overwritten at some point while the program is running? it should persist as long as the server is running
 		if [ "0" = "$status" ] ; then
 			$gtm_dist/mupip stop `cat $pid`
 		fi
