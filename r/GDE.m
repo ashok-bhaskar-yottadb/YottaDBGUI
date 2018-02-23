@@ -3,6 +3,9 @@
 ; Copyright (c) 2001-2017 Fidelity National Information		;
 ; Services, Inc. and/or its subsidiaries. All rights reserved.	;
 ;								;
+; Copyright (c) 2017,2018 YottaDB LLC. and/or its subsidiaries.	;
+; All rights reserved.						;
+;								;
 ;	This source code contains the intellectual property	;
 ;	of its copyright holder(s), and is made available	;
 ;	under a license.  If you do not know the terms of	;
@@ -51,6 +54,7 @@ DBG:	;transfer point for DEBUG and "runtime" %gde
         .merge getMapData("maxreg")=maxreg
         .merge getMapData("minseg")=minseg
         .merge getMapData("maxseg")=maxseg
+	.if $ZJOBEXAM() ;DEBUG -remove
 	i debug s prompt="DEBUGDE>",uself="logfile"
 	e  s prompt="GDE>",uself="logfile:(ctrap=$c(3,25,26):exception=""d CTRL^GDE"")"
 	e  s useio="io:(ctrap=$c(3,25,26):exception=""d CTRL^GDE"")"

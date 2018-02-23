@@ -1,3 +1,15 @@
+;################################################################
+;								#
+; Copyright (c) 2018 YottaDB LLC. and/or its subsidiaries.	#
+; All rights reserved.						#
+;								#
+;	This source code contains the intellectual property	#
+;	of its copyright holder(s), and is made available	#
+;	under a license.  If you do not know the terms of	#
+;	the license, please stop and do not read further.	#
+;								#
+;################################################################
+
 addnode ;;2018-01-03 AKB test of round-trip communication; delete this, as the program will no longer do a roundtrip for add/delete
 handle()
 	;

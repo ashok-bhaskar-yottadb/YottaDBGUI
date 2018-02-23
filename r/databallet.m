@@ -2,6 +2,14 @@
  ; This file is part of DataBallet.
  ; Copyright (C) 2012-2013 Laurent Parenteau <laurent.parenteau@gmail.com>
  ; Copyright (C) 2015 Sam Habiel <Sam.Habiel@gmail.com>
+ ;								
+ ; Copyright (c) 2018 YottaDB LLC. and/or its subsidiaries.	
+ ; All rights reserved.						
+ ;								
+ ;	This source code contains the intellectual property	
+ ;	of its copyright holder(s), and is made available	
+ ;	under a license.  If you do not know the terms of	
+ ;	the license, please stop and do not read further.	
  ;
  ; DataBallet is free software: you can redistribute it and/or modify
  ; it under the terms of the GNU Affero General Public License as published by

@@ -1,3 +1,12 @@
+/* Copyright (c) 2017-2018 YottaDB LLC. and/or its subsidiaries.
+ * All rights reserved.						
+ *								
+ *	This source code contains the intellectual property	
+ *	of its copyright holder(s), and is made available	
+ *	under a license.  If you do not know the terms of	
+ *	the license, please stop and do not read further.	
+ */
+
 window.onload = function() {
 
   //TODO Sam Habiel's extra parameter suggestion?
@@ -22,6 +31,10 @@ window.onload = function() {
   sig.settings('labelThreshold', 1);
 
   var model = {};
+  var view = {
+    xScalingFactor: 1,
+    yScalingFactor: 1,
+  };
 
 
   //initialize dialogs so that the blocker dialog can be used in getMap()
@@ -144,8 +157,8 @@ window.onload = function() {
     sig.graph.addNode({
       id: nodeInfo.prefix + (idMaxNumber+1), //"[n/r/s/f]"+len will result in non-unique id error if deleting nodes doesn't adjust remaining ids such that the number portion is never >= the number of nodes
       label: nodeNameString,
-      x: nodeInfo.x,
-      y: len, //will result in position overlap error if deleting nodes doesn't adjust y-position of existing nodes to make them compact
+      x: nodeInfo.x * view.xScalingFactor,
+      y: ((nodeinfo.modelField === "nams") ? len : len * view.yScalingFactor), //will result in position overlap error if deleting nodes doesn't adjust y-position of existing nodes to make them compact
       size: 1,
       color: nodeInfo.color,
     });
@@ -190,7 +203,7 @@ window.onload = function() {
     sig.graph.dropNode(nodeToDeleteId);
     nodesOfType = sig.graph.nodes().filter(node => node.id.substring(0,1) === nodeIdPrefix);
     for (let i = 0; i < nodesOfType.length; ++i) {
-      nodesOfType[i].y = i;
+      nodesOfType[i].y = ((nodeIdPrefix === 'n') ? i : i * view.yScalingFactor);
     }
     /*sig.graph.addNode({
       id: "r"+len, //will result in non-unique id error if deleting nodes doesn't adjust remaining ids such that the number portion is never >= the number of nodes - update - changing node IDs without changing edge IDs is a bad idea with current design
@@ -357,6 +370,8 @@ window.onload = function() {
         //TODO: make sure that region/segment parameter names indeed show up on the JS side in uppercase
         //is the filter undefined operation here redundant? (i.e. if undefined segment-file associations are being treated as an error and handled elsewhere, like in the edge-drawing code in this function)
         const filesArray = Array.from(new Set(segmentsArray.map(seg => segs[seg].FILE_NAME))).filter(file => file != undefined)//Array.from(new Set(Object.values(segFileMap)));
+	view.xScalingFactor = Math.max(1, namesArray.length/3)
+	view.yScalingFactor = Math.max(1, namesArray.length/regionsArray.length);
         const nameIds = {};   //cannot use name/region/etc. strings as sigma element ids due to possible duplicates
         const regionIds = {};
         const segmentIds = {};
@@ -367,7 +382,7 @@ window.onload = function() {
            sig.graph.addNode({
              id: nameId,
              label: namesArray[i],
-             x: 0,
+             x: 0 * view.xScalingFactor,
              y: i,
              size: 1,
              color: '#f00',
@@ -379,8 +394,8 @@ window.onload = function() {
            sig.graph.addNode({
              id: regionId,
              label: regionsArray[i],
-             x: 1,
-             y: i,
+             x: 2 * view.xScalingFactor,
+             y: i * view.yScalingFactor,
              size: 1,
              color: '#00f',
            });
@@ -391,8 +406,8 @@ window.onload = function() {
            sig.graph.addNode({
              id: segmentId,
              label: segmentsArray[i],
-             x: 2,
-             y: i,
+             x: 3 * view.xScalingFactor,
+             y: i * view.yScalingFactor,
              size: 1,
              color: '#0f0',
            });
@@ -403,8 +418,8 @@ window.onload = function() {
            sig.graph.addNode({
              id: fileId,
              label: filesArray[i],
-             x: 3,
-             y: i,
+             x: 4 * view.xScalingFactor,
+             y: i * view.yScalingFactor,
              size: 1,
              color: '#000',
            });
@@ -715,9 +730,9 @@ click node for info prompt, with "delete" button inside, and also "connect to re
 
 //how to deal with local locks (#) and catchall (*) parts of nams? DEFAULT reg & seg? TODO
 //-display # as "Local Locks" or similar - what happens if the user modifies it/tries to modify it? how should it appear on the server side?
-//-make un-deletable, store as "#" in model, and display label as "<LOCAL LOCKS>"?
+//-make un-deletable, store as "#" in model, and display label as "<LOCAL LOCKS>"? or display as "# (Local Locks)"?
 //-if it is deletable, special way of having to re-create?
-//-special error message for trying to create duplicate # name node, since model name doesn't match display name? 
+//-special error message for trying to create duplicate # name node, since model name doesn't match display name? something like "#, which represents local locks, already exists"
 //-also make * un-deletable?
 
 //need to separate model and view code
@@ -726,7 +741,10 @@ click node for info prompt, with "delete" button inside, and also "connect to re
 //simply convert DataBallet globals to locals? -changed TMP, CACHE, and SESSION (there might be more) - stopping DataBallet was abnormal - UI displayed map for original GLD, failed to display when switching to acct.gld - need to figure out why
 //check out Sam's web server code
 
-//TODO copy VM to orval once, set up password-less rsync cron job
 //TODO remove r/userconf.m from git repo
 //
-//TODOs: clean stop, accept only one connection, template modification (JS side), save/verify, changes to GDE - where do they get saved?
+//TODO clean stop, accept only one connection, template modification (JS side), save/verify, changes to GDE - where do they get saved? (-work locally now, merge into YottaDB repo later), load and test more glds
+//TODO better handling of large numbers of graph nodes
+//TODO better graph organization - what algorithm? minimize total line distance? minimize sum of squares of line distances? group by names by region? re-render button for simplifying graph after adding or deleting nodes and/or re-render on add/delete?
+//-region/segment/file spacing scaling factor? on draw/add/delete events for non-name nodes
+//-also an x-scaling factor

@@ -1,8 +1,14 @@
-        ;;AKB note: this is the version that Sam re-wrote, I believe - how different is it from the original, and how does it affect copyright? -Sam makes no claim of copyright 
-	;;2017-12-20  3:02 PM
 	; This file is part of DataBallet.
 	; Copyright (C) 2012 Laurent Parenteau <laurent.parenteau@gmail.com>
-	;
+	;								
+	; Copyright (c) 2017-2018 YottaDB LLC. and/or its subsidiaries.	
+	; All rights reserved.						
+	;								
+	;	This source code contains the intellectual property	
+	;	of its copyright holder(s), and is made available	
+	;	under a license.  If you do not know the terms of	
+	;	the license, please stop and do not read further.	
+	;	
 	; DataBallet is free software: you can redistribute it and/or modify
 	; it under the terms of the GNU Affero General Public License as published by
 	; the Free Software Foundation, either version 3 of the License, or
