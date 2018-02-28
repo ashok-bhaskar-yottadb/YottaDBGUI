@@ -519,17 +519,31 @@ window.onload = function() {
     sendObj.tmpseg = model.tmpseg;
     sendObj.tmpacc = model.tmpacc;
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.responseType = 'json';
     xmlHttp.open("POST", "verify", true);
     xmlHttp.onreadystatechange = function() { 
       if (this.readyState == 4 && xmlHttp.status == 200) {
+	//2012-02-28 AKB - response text is XML with one line containing a JSON object instead of pure JSON, for some reason
         //const responseObj = JSON.parse(xmlHttp.responseText);
-        const responseObj = xmlHttp.response;
+        const responseArr = xmlHttp.responseText.split('\n');
+	let responseObj = null;
+	for (let i = 0; i < responseArr.length; ++i) {
+	  try {
+	    responseObj = JSON.parse(responseArr[i]);
+	    break;
+	  }
+	  catch {continue;}
+	}
+	console.log(responseObj);
         if (false) {
           //parse/missing-data error handling block - to fill in
           return;
         }
-        console.log(responseObj);
+	if (responseObj.verifyStatus == 'success') {
+	  toastr.success("Verification successful");
+        }
+	else {
+	  toastr.error("Verification unsuccessful");
+	}
       }
       else if (this.readyState == 4 && xmlHttp.status != 200) {
         toastr.error("Verify encountered server error: Http status " + xmlHttp.status);
