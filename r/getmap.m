@@ -43,6 +43,7 @@ handle()
 
   ;there was an "XML not well-formed, getmap line 2 column 22" (or something) bug that cropped up a few times which I can't reproduce reliably (AKB 2018-02-05)
   ;"XML Parsing Error: not well-formed Location: http://localhost:8080/getmap Line Number 2, Column 22:"
+  ;sometimes this routine doesn't work as intended, with an empty response on the client - why?
 
   ;do ^sstep ;DEBUG -remove
 
@@ -84,5 +85,7 @@ handle()
 
 	; Validate the cache
 	do validatecache^request()
+
+  ;if $ZJOBEXAM() ;DEBUG -remove
 
 	quit

@@ -112,7 +112,7 @@ start()
  ; Start the HTTP server.
  ;
  v "YLCT":0:1:0          ; sets local variable alternate collation = 0, null collation = 1, numeric collation = 0 ;2018-02-08 AKB - COPIED OVER FROM GDE.m DEBUG VER TO WORK WITH DUMPING GDE LOCALS TO GLOBALS - REMOVE LATER
- do ^sstep ;DEBUG -remove
+ ;do ^sstep ;DEBUG -remove
  ;if $ZJOBEXAM() ;DEBUG -remove
  set $ZTRAP="do errhandler^databallet"
  new conf
@@ -136,7 +136,7 @@ listen(port,debug)
  ;
  ; Listen on a particular socket for incomming connection
  ;
- do ^sstep ;DEBUG - remove
+ ;do ^sstep ;DEBUG - remove
  ;if $ZJOBEXAM() ;DEBUG - remove
  set $ZTRAP="do errhandler^databallet"
  new conf
@@ -190,7 +190,7 @@ serve(isTLS)
  ; Serve web page(s) to a connected client.
  ;
  ;if $ZJOBEXAM() ;DEBUG remove - trying to find out when and why $ZGBLDIR switches
- do ^sstep
+ ;do ^sstep ;DEBUG remove
  set $ZTRAP="do errhandler^databallet"
  new io s io=$g(socket,$principal)
  if isTLS do
@@ -255,7 +255,7 @@ servesinglereq(line)
  ;
 
  ;if $ZJOBEXAM() ;DEBUG remove
- do ^sstep ;DEBUG remove
+ ;do ^sstep ;DEBUG remove
  new request,response,length
 
  ; Extract method

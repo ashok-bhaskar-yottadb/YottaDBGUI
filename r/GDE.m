@@ -54,7 +54,7 @@ DBG:	;transfer point for DEBUG and "runtime" %gde
         .merge getMapData("maxreg")=maxreg
         .merge getMapData("minseg")=minseg
         .merge getMapData("maxseg")=maxseg
-	.if $ZJOBEXAM() ;DEBUG -remove
+	;.if $ZJOBEXAM() ;DEBUG -remove
 	i debug s prompt="DEBUGDE>",uself="logfile"
 	e  s prompt="GDE>",uself="logfile:(ctrap=$c(3,25,26):exception=""d CTRL^GDE"")"
 	e  s useio="io:(ctrap=$c(3,25,26):exception=""d CTRL^GDE"")"

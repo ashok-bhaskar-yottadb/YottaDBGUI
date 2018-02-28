@@ -30,8 +30,10 @@ handle()
   ;set responseObj("status")=responseStatusStr
   ;set responseStr=$$encode^json("responseObj")
 
-  new responseObj,responseStr,responseStatus
-  set (responseStr,responseStatus)=""
+  ;2012-02-27 AKB - why is the verify response XML with a stringified JSON object among other lines, while the getmap response is just a JSON object?
+
+  new responseObj,responseStr,verifyStatus
+  set (responseStr,verifyStatus)=""
   new nams,regs,segs,tmpacc,tmpreg,tmpseg,minreg,maxreg,minseg,maxseg
   merge nams=push("nams") ;NOTE: the object sent from the client doesn't contain the nams/regs/segs count component stored in the unsubscripted spot
                           ;i.e. while GDE has locals like nams=2, regs=2, segs=1 storing the num of names/regions/segments, the client doesn't send that data back
@@ -41,14 +43,13 @@ handle()
   merge tmpacc=push("tmpacc")
   merge tmpreg=push("tmpreg")
   merge tmpseg=push("tmpseg")
-  merge minreg=push("minreg")
-  merge maxreg=push("maxreg")
-  merge minseg=push("minseg")
-  merge maxseg=push("maxseg")
-  i $$ALL^GDEVERIF s responseStatus="success"
-  e  s responseStatus="failure"
-  set responseObj("status")=responseStatus
+  do GDEINIT^GDEINIT
+  do GDEMSGIN^GDEMSGIN
+  i $$ALL^GDEVERIF s verifyStatus="success"
+  e  s verifyStatus="failure"
+  set responseObj("verifyStatus")=verifyStatus
   set responseStr=$$encode^json("responseObj")
+  ;if $ZJOBEXAM() ;DEBUG -remove
 
   ; This is a reply. You can just say 201 created in the status and be done.
 	if status=0 do
@@ -66,5 +67,7 @@ handle()
 
 	; Validate the cache
 	do validatecache^request()
+
+  ;if $ZJOBEXAM() ;DEBUG -remove
 
 	quit

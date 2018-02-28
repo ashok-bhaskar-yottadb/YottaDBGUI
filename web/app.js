@@ -158,7 +158,7 @@ window.onload = function() {
       id: nodeInfo.prefix + (idMaxNumber+1), //"[n/r/s/f]"+len will result in non-unique id error if deleting nodes doesn't adjust remaining ids such that the number portion is never >= the number of nodes
       label: nodeNameString,
       x: nodeInfo.x * view.xScalingFactor,
-      y: ((nodeinfo.modelField === "nams") ? len : len * view.yScalingFactor), //will result in position overlap error if deleting nodes doesn't adjust y-position of existing nodes to make them compact
+      y: ((nodeInfo.modelField === "nams") ? len : len * view.yScalingFactor), //will result in position overlap error if deleting nodes doesn't adjust y-position of existing nodes to make them compact
       size: 1,
       color: nodeInfo.color,
     });
@@ -509,7 +509,7 @@ window.onload = function() {
   }
 
   //don't think this needs forced synchrony - just Save function
-  //TODO implement actual verification
+  //TODO print proper error message to screen; speed up latency? (server side, I think)
   document.getElementById('verifyBtn').onclick = function(e) {
     var sendObj = {};
     sendObj.nams = model.nams;
@@ -519,10 +519,12 @@ window.onload = function() {
     sendObj.tmpseg = model.tmpseg;
     sendObj.tmpacc = model.tmpacc;
     var xmlHttp = new XMLHttpRequest();
+    xmlHttp.responseType = 'json';
     xmlHttp.open("POST", "verify", true);
     xmlHttp.onreadystatechange = function() { 
       if (this.readyState == 4 && xmlHttp.status == 200) {
-        const responseObj = JSON.parse(xmlHttp.responseText);
+        //const responseObj = JSON.parse(xmlHttp.responseText);
+        const responseObj = xmlHttp.response;
         if (false) {
           //parse/missing-data error handling block - to fill in
           return;
