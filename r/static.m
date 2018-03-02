@@ -78,8 +78,9 @@ getfile(docroot,urlroot)
 	else  do
 	.	; If the requested URI is a directory, use the default file.
 	.	if d1=file set file=file_conf("index")
+	.	s KBBO("defaultfileused")=file
 	.	; If the file doesn't exist, send a 404 not found.
 	.	set dontcare=$zsearch("")
-	.	if ($zsearch(file)="")!($zextract(file,0,$zlength(docroot))'=docroot) do set^response(404)  set file=""
-
+	;.	if ($zsearch(file)="")!($zextract(file,0,$zlength(docroot))'=docroot) s KBBO("404d")=1,KBBO("file")=$zsearch(file),KBBO("zextract")=$zextract(file,0,$zlength(docroot)),KBBO("docroot")=docroot do set^response(404)  set file=""
+	.       if ($zsearch(file)="") s KBBO("404d")=1,KBBO("file")=$zsearch(file),KBBO("zextract")=$zextract(file,0,$zlength(docroot)),KBBO("docroot")=docroot do set^response(404)  set file=""
 	quit file
