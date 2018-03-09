@@ -120,7 +120,9 @@ window.onload = function() {
       model.regs[nodeNameString] = {};
       model.regs[nodeNameString].DYNAMIC_SEGMENT = "";
       Object.keys(model.tmpreg).map(propertyName => {
-        model.regs[nodeNameString][propertyName] = model.tmpreg[propertyName];
+	if (propertyName !== "") {
+          model.regs[nodeNameString][propertyName] = model.tmpreg[propertyName];
+	}
       });
     }
     else if (nodeInfo.modelField === "segs") {
@@ -142,7 +144,9 @@ window.onload = function() {
       model.segs[nodeNameString].FILE_NAME = "";
       let segmentTemplate = model.tmpseg[model.tmpacc];
       Object.keys(segmentTemplate).map(propertyName => {
-        model.segs[nodeNameString][propertyName] = segmentTemplate[propertyName];
+	if (propertyName !== "") { //property with name "" seems to contain value "DEFAULT" for both BG and MM - what is its purpose?
+          model.segs[nodeNameString][propertyName] = segmentTemplate[propertyName];
+	}
       });
     }
     else throw "nodeInfo.modelField not recognized: " + nodeInfo.modelField;
@@ -341,7 +345,17 @@ window.onload = function() {
     xmlHttp.onreadystatechange = function() { 
       if (this.readyState == 4 && xmlHttp.status == 200) {
         //todo: JSON.parse error handling
+	//use the same try-catch parse structure as in the verify response? -doesn't solve the empty-response problem
         const responseObj = JSON.parse(xmlHttp.responseText);
+	/*const responseArr = xmlHttp.responseText.split('\n');
+	let responseObj = null;
+	for (let i = 0; i < responseArr.length; ++i) {
+	  try {
+	    responseObj = JSON.parse(responseArr[i]);
+	    break;
+	  }
+	  catch(error) {continue;}
+	}*/
         if (false) { //check that nams, regs, segs, and other vars were obtained
           //handle error
           $('#blocker').dialog('close');
@@ -363,8 +377,25 @@ window.onload = function() {
         model.maxreg = responseObj.maxreg;
         model.minseg = responseObj.minseg;
         model.maxseg = responseObj.maxseg;
+	model.gnams = responseObj.gnams;
+	model.create = responseObj.create;
+	model.file = responseObj.file;
+	model.useio = responseObj.useio;
+	model.debug = responseObj.debug;
 
-        const namesArray = Object.keys(nams); //todo: true immutability?
+        //const namesArray = Object.keys(nams); //TODO: true immutability?
+	/*const namesArray = Object.values(
+		             Object.keys(nams).reduce((rv, nam) => {(rv[nams[nam]] = rv[nams[nam]] || []).push(nam); return rv;}, {}) //group names by region
+                           ).reduce((xs, ys) => xs.concat(ys), []); //group-by returns map of regions to arrays of names; concatenate the arrays */
+        let namesArray = [];
+        const namesGroupedByRegion = Object.keys(nams).reduce(
+	  (rv, nam) => {
+	    (rv[nams[nam]] = rv[nams[nam]] || []).push(nam);
+	    return rv;
+	  }, {}
+	);
+        Object.keys(namesGroupedByRegion).sort().forEach(region => namesArray = namesArray.concat(namesGroupedByRegion[region]));
+	  //populate namesArray by region alphabetical order, and in name alphabetical order within each region
         const regionsArray = Object.keys(regs);
         const segmentsArray = Object.keys(segs);
         //TODO: make sure that region/segment parameter names indeed show up on the JS side in uppercase
@@ -394,7 +425,7 @@ window.onload = function() {
            sig.graph.addNode({
              id: regionId,
              label: regionsArray[i],
-             x: 2 * view.xScalingFactor,
+             x: 1 * view.xScalingFactor,
              y: i * view.yScalingFactor,
              size: 1,
              color: '#00f',
@@ -406,7 +437,7 @@ window.onload = function() {
            sig.graph.addNode({
              id: segmentId,
              label: segmentsArray[i],
-             x: 3 * view.xScalingFactor,
+             x: 2 * view.xScalingFactor,
              y: i * view.yScalingFactor,
              size: 1,
              color: '#0f0',
@@ -418,7 +449,7 @@ window.onload = function() {
            sig.graph.addNode({
              id: fileId,
              label: filesArray[i],
-             x: 4 * view.xScalingFactor,
+             x: 3 * view.xScalingFactor,
              y: i * view.yScalingFactor,
              size: 1,
              color: '#000',
@@ -518,6 +549,7 @@ window.onload = function() {
     sendObj.tmpreg = model.tmpreg;
     sendObj.tmpseg = model.tmpseg;
     sendObj.tmpacc = model.tmpacc;
+    sendObj.gnams = model.gnams;
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", "verify", true);
     xmlHttp.onreadystatechange = function() { 
@@ -531,7 +563,7 @@ window.onload = function() {
 	    responseObj = JSON.parse(responseArr[i]);
 	    break;
 	  }
-	  catch {continue;}
+	  catch(error) {continue;}
 	}
 	console.log(responseObj);
         if (false) {
@@ -563,17 +595,23 @@ window.onload = function() {
     sendObj.tmpreg = model.tmpreg;
     sendObj.tmpseg = model.tmpseg;
     sendObj.tmpacc = model.tmpacc;
+    sendObj.gnams = model.gnams;
+    sendObj.create = model.create;
+    sendObj.file = model.file;
+    sendObj.useio = model.useio;
+    sendObj.debug = model.debug;
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", "save", true);
     xmlHttp.onreadystatechange = function() { 
       if (this.readyState == 4 && xmlHttp.status == 200) {
-        const responseObj = JSON.parse(xmlHttp.responseText);
+        //const responseObj = JSON.parse(xmlHttp.responseText);
         if (false) {
           //parse/missing-data error handling block - to fill in
           $('#blocker').dialog('close');
           return;
         }
-        console.log(responseObj);
+        console.log(xmlHttp.responseText);
+	//TODO update the graph
       }
       else if (this.readyState == 4 && xmlHttp.status != 200) {
         toastr.error("Verify encountered server error: Http status " + xmlHttp.status);
@@ -764,3 +802,5 @@ click node for info prompt, with "delete" button inside, and also "connect to re
 //TODO better graph organization - what algorithm? minimize total line distance? minimize sum of squares of line distances? group by names by region? re-render button for simplifying graph after adding or deleting nodes and/or re-render on add/delete?
 //-region/segment/file spacing scaling factor? on draw/add/delete events for non-name nodes
 //-also an x-scaling factor
+//
+//GETOUT^GDEEXIT when connection closes?

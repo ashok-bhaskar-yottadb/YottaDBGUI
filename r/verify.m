@@ -43,13 +43,13 @@ handle()
   merge tmpacc=push("tmpacc")
   merge tmpreg=push("tmpreg")
   merge tmpseg=push("tmpseg")
+  merge gnams=push("gnams")
   do GDEINIT^GDEINIT
   do GDEMSGIN^GDEMSGIN
   i $$ALL^GDEVERIF s verifyStatus="success"
   e  s verifyStatus="failure"
   set responseObj("verifyStatus")=verifyStatus
   set responseStr=$$encode^json("responseObj")
-  ;if $ZJOBEXAM() ;DEBUG -remove
 
   ; This is a reply. You can just say 201 created in the status and be done.
 	if status=0 do
