@@ -51,14 +51,14 @@ window.onload = function() {
 
   //initialize the graph - does this have to be done here with a function that contains a POST request, or can the necessary data be sent without the POST request in this function?
   getMap();
-//TODO how to prevent the rest of the application from being operational until the callback in getMap finishes, and only if the success branch is hit - getMap() should be effectively synchronous
-//-one part is using a "loading" blocker while getMap and its callback are running, but that alone doesn't stop the application on failure
+  //TODO how to prevent the rest of the application from being operational until the callback in getMap finishes, and only if the success branch is hit - getMap() should be effectively synchronous
+  //-one part is using a "loading" blocker while getMap and its callback are running, but that alone doesn't stop the application on failure
 
 
   document.getElementById("addNodeBtn").onclick = function(e) {
     $("#addnode-dialog").dialog("open");
   }
-  
+
   document.getElementById("deleteNodeBtn").onclick = function(e) {
     $("#deletenode-dialog").dialog("open");
   }
@@ -95,8 +95,7 @@ window.onload = function() {
     let nodeInfo = null;
     try {
       nodeInfo = getNodeInfoOfType(nodeType);
-    }
-    catch (err) {
+    } catch (err) {
       toastr.error("Could not get node info: " + err);
       return;
     }
@@ -109,8 +108,7 @@ window.onload = function() {
         return;
       }
       model.nams[nodeNameString] = "";
-    }
-    else if (nodeInfo.modelField === "regs") {
+    } else if (nodeInfo.modelField === "regs") {
       if (Object.keys(model.regs).map(r => r.toUpperCase()).includes(nodeNameString.toUpperCase())) { //TODO encapsulate
         toastr.error('Region ' + nodeNameString + ' already exists');
         return;
@@ -124,9 +122,8 @@ window.onload = function() {
           model.regs[nodeNameString][propertyName] = model.tmpreg[propertyName];
 	}
       });
-    }
-    else if (nodeInfo.modelField === "segs") {
-      if (Object.keys(model.segs).map(s => s.toUpperCase()).includes(nodeNameString.toUpperCase())) {  //TODO encapsulate
+    } else if (nodeInfo.modelField === "segs") {
+      if (Object.keys(model.segs).map(s => s.toUpperCase()).includes(nodeNameString.toUpperCase())) { //TODO encapsulate
         toastr.error('Segment ' + nodeNameString + ' already exists');
         return;
       }
@@ -134,8 +131,7 @@ window.onload = function() {
       if (!model.tmpacc) {
         toastr.error("Could not create segment: model.tmpacc not found");
         return;
-      }
-      else if (!Object.keys(model.tmpseg).includes(model.tmpacc)) {
+      } else if (!Object.keys(model.tmpseg).includes(model.tmpacc)) {
         toastr.error("Could not create segment - model.tmpacc not recognized: " + model.tmpacc);
         return;
       }
@@ -148,18 +144,17 @@ window.onload = function() {
           model.segs[nodeNameString][propertyName] = segmentTemplate[propertyName];
 	}
       });
-    }
-    else throw "nodeInfo.modelField not recognized: " + nodeInfo.modelField;
+    } else throw "nodeInfo.modelField not recognized: " + nodeInfo.modelField;
 
-    $("#addnode-dialog").dialog("close"); 
+    $("#addnode-dialog").dialog("close");
 
     //add node to graph
     const nodes = nodeInfo.nodes;
     const len = nodes.length;
     const idMaxNumber = nodes.map(node => parseInt(node.id.substring(1), 10)).reduce((max, current) => Math.max(max, current), -1);
-      //find the maximum numeric portion among node IDs (which are all non-negative), defaulting to -1 if no nodes are present
+    //find the maximum numeric portion among node IDs (which are all non-negative), defaulting to -1 if no nodes are present
     sig.graph.addNode({
-      id: nodeInfo.prefix + (idMaxNumber+1), //"[n/r/s/f]"+len will result in non-unique id error if deleting nodes doesn't adjust remaining ids such that the number portion is never >= the number of nodes
+      id: nodeInfo.prefix + (idMaxNumber + 1), //"[n/r/s/f]"+len will result in non-unique id error if deleting nodes doesn't adjust remaining ids such that the number portion is never >= the number of nodes
       label: nodeNameString,
       x: nodeInfo.x * view.xScalingFactor,
       y: ((nodeInfo.modelField === "nams") ? len : len * view.yScalingFactor), //will result in position overlap error if deleting nodes doesn't adjust y-position of existing nodes to make them compact
@@ -174,27 +169,24 @@ window.onload = function() {
     const nodeToDeleteLabel = $("#clicknode-dialog").data("node-label");
     //update model
     //this way of determining node type is fragile - should try to correct it when possible
-    const nodeIdPrefix = nodeToDeleteId.substring(0,1); 
+    const nodeIdPrefix = nodeToDeleteId.substring(0, 1);
     if (nodeIdPrefix === 'n') {
       delete model.nams[nodeToDeleteLabel];
-    }
-    else if (nodeIdPrefix === 'r') {
+    } else if (nodeIdPrefix === 'r') {
       delete model.regs[nodeToDeleteLabel];
       Object.keys(model.nams).map(nam => {
         if (regionLabelEqual(model.nams[nam], nodeToDeleteLabel)) {
           model.nams[nam] = "";
         }
       });
-    }
-    else if (nodeIdPrefix === 's') {
+    } else if (nodeIdPrefix === 's') {
       delete model.segs[nodeToDeleteLabel];
       Object.keys(model.regs).map(reg => {
         if (segmentLabelEqual(model.regs[reg].DYNAMIC_SEGMENT, nodeToDeleteLabel)) {
           model.regs[reg].DYNAMIC_SEGMENT = "";
         }
       });
-    }
-    else {
+    } else {
       toastr.error("Unrecognized node ID prefix: " + nodeIdPrefix);
       return;
     }
@@ -205,7 +197,7 @@ window.onload = function() {
     //delete node from graph
     //is it indeed safe to get the node ID by attaching it to and then grabbing it from the node info dialog? I believe it is
     sig.graph.dropNode(nodeToDeleteId);
-    nodesOfType = sig.graph.nodes().filter(node => node.id.substring(0,1) === nodeIdPrefix);
+    nodesOfType = sig.graph.nodes().filter(node => node.id.substring(0, 1) === nodeIdPrefix);
     for (let i = 0; i < nodesOfType.length; ++i) {
       nodesOfType[i].y = ((nodeIdPrefix === 'n') ? i : i * view.yScalingFactor);
     }
@@ -228,7 +220,7 @@ window.onload = function() {
     const thisNodeLabel = $("#clicknode-dialog").data("node-label");
     //update model
     //this method of determining node type is fragile
-    const thisNodeIdPrefix = thisNodeId.substring(0,1);
+    const thisNodeIdPrefix = thisNodeId.substring(0, 1);
     if (thisNodeIdPrefix === 'n') {
       if (linkTargetLabel !== "" && !Object.keys(model.regs).map(r => r.toUpperCase()).includes(linkTargetLabel.toUpperCase())) { //TODO encapsulate case-insensitive relationship
         toastr.error("Region " + linkTargetLabel + " does not exist");
@@ -239,8 +231,7 @@ window.onload = function() {
         return;
       }
       model.nams[thisNodeLabel] = linkTargetLabel;
-    }
-    else if (thisNodeIdPrefix === 'r') {
+    } else if (thisNodeIdPrefix === 'r') {
       if (linkTargetLabel !== "" && !Object.keys(model.segs).map(s => s.toUpperCase()).includes(linkTargetLabel.toUpperCase())) { //TODO encapsulate case-insensitive relationship
         toastr.error("Segment " + linkTargetLabel + " does not exist");
         return;
@@ -250,15 +241,13 @@ window.onload = function() {
         return;
       }
       model.regs[thisNodeLabel].DYNAMIC_SEGMENT = linkTargetLabel;
-    }
-    else if (thisNodeIdPrefix === 's') {
+    } else if (thisNodeIdPrefix === 's') {
       if (model.segs[thisNodeLabel].FILE_NAME === linkTargetLabel) {
         $("#changelink-dialog").dialog('close');
         return;
       }
       model.segs[thisNodeLabel].FILE_NAME = linkTargetLabel;
-    }
-    else {
+    } else {
       toastr.error("Unrecognized node ID prefix: " + thisNodeIdPrefix);
       return;
     }
@@ -272,22 +261,21 @@ window.onload = function() {
       outEdgeWrapped.map(edge => sig.graph.dropEdge(edge.id));
       //draw edge, if needed
       if (linkTargetLabel !== "") {
-        targetNodeId = sig.graph.nodes().filter(node => node.id.substring(0,1) === 'r' && regionLabelEqual(node.label, linkTargetLabel))[0].id
+        targetNodeId = sig.graph.nodes().filter(node => node.id.substring(0, 1) === 'r' && regionLabelEqual(node.label, linkTargetLabel))[0].id
         sig.graph.addEdge({
-          id: thisNodeId+'-'+targetNodeId,
+          id: thisNodeId + '-' + targetNodeId,
           source: thisNodeId,
           target: targetNodeId,
         });
       }
-    }
-    else if (thisNodeIdPrefix === 'r') {
+    } else if (thisNodeIdPrefix === 'r') {
       //erase existing outgoing edge, if present
       outEdgeWrapped.map(edge => sig.graph.dropEdge(edge.id));
       //draw edge, if needed
       if (linkTargetLabel !== "") {
-        targetNodeId = sig.graph.nodes().filter(node => node.id.substring(0,1) === 's' && segmentLabelEqual(node.label, linkTargetLabel))[0].id
+        targetNodeId = sig.graph.nodes().filter(node => node.id.substring(0, 1) === 's' && segmentLabelEqual(node.label, linkTargetLabel))[0].id
         sig.graph.addEdge({
-          id: thisNodeId+'-'+targetNodeId,
+          id: thisNodeId + '-' + targetNodeId,
           source: thisNodeId,
           target: targetNodeId,
         });
@@ -303,19 +291,18 @@ window.onload = function() {
       }
       //create file node if necessary and draw edge
       if (linkTargetLabel != "") {
-        const targetNodeWrapped = sig.graph.nodes().filter(node => node.id.substring(0,1) === 'f' && node.label === linkTargetLabel)
+        const targetNodeWrapped = sig.graph.nodes().filter(node => node.id.substring(0, 1) === 'f' && node.label === linkTargetLabel)
         if (targetNodeWrapped.length > 0) {
           targetNodeId = targetNodeWrapped[0].id;
           sig.graph.addEdge({
-            id: thisNodeId+'-'+targetNodeId,
+            id: thisNodeId + '-' + targetNodeId,
             source: thisNodeId,
             target: targetNodeId,
           });
-        }
-        else {
-          const fileNodes = sig.graph.nodes().filter(node => node.id.substring(0,1) === 'f');
+        } else {
+          const fileNodes = sig.graph.nodes().filter(node => node.id.substring(0, 1) === 'f');
           const fileMaxIdNumber = fileNodes.map(node => parseInt(node.id.substring(1), 10)).reduce((max, current) => Math.max(max, current), -1);
-          const targetNodeId = 'f' + (fileMaxIdNumber+1);
+          const targetNodeId = 'f' + (fileMaxIdNumber + 1);
           sig.graph.addNode({
             id: targetNodeId,
             label: linkTargetLabel,
@@ -325,7 +312,7 @@ window.onload = function() {
             color: '#000',
           });
           sig.graph.addEdge({
-            id: thisNodeId+'-'+targetNodeId,
+            id: thisNodeId + '-' + targetNodeId,
             source: thisNodeId,
             target: targetNodeId,
           });
@@ -342,7 +329,7 @@ window.onload = function() {
     $('#blocker').dialog('open');
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", "getmap", true);
-    xmlHttp.onreadystatechange = function() { 
+    xmlHttp.onreadystatechange = function() {
       if (this.readyState == 4 && xmlHttp.status == 200) {
         //todo: JSON.parse error handling
 	//use the same try-catch parse structure as in the verify response? -doesn't solve the empty-response problem
@@ -400,60 +387,60 @@ window.onload = function() {
         const segmentsArray = Object.keys(segs);
         //TODO: make sure that region/segment parameter names indeed show up on the JS side in uppercase
         //is the filter undefined operation here redundant? (i.e. if undefined segment-file associations are being treated as an error and handled elsewhere, like in the edge-drawing code in this function)
-        const filesArray = Array.from(new Set(segmentsArray.map(seg => segs[seg].FILE_NAME))).filter(file => file != undefined)//Array.from(new Set(Object.values(segFileMap)));
-	view.xScalingFactor = Math.max(1, namesArray.length/3)
-	view.yScalingFactor = Math.max(1, namesArray.length/regionsArray.length);
-        const nameIds = {};   //cannot use name/region/etc. strings as sigma element ids due to possible duplicates
+        const filesArray = Array.from(new Set(segmentsArray.map(seg => segs[seg].FILE_NAME))).filter(file => file != undefined) //Array.from(new Set(Object.values(segFileMap)));
+        view.xScalingFactor = Math.max(1, namesArray.length / 3)
+        view.yScalingFactor = Math.max(1, namesArray.length / regionsArray.length);
+        const nameIds = {}; //cannot use name/region/etc. strings as sigma element ids due to possible duplicates
         const regionIds = {};
         const segmentIds = {};
         const fileIds = {};
         for (let i = 0; i < namesArray.length; ++i) {
-           let nameId = "n"+i;
-           nameIds[namesArray[i]] = nameId;
-           sig.graph.addNode({
-             id: nameId,
-             label: namesArray[i],
-             x: 0 * view.xScalingFactor,
-             y: i,
-             size: 1,
-             color: '#f00',
-           });
+          let nameId = "n" + i;
+          nameIds[namesArray[i]] = nameId;
+          sig.graph.addNode({
+            id: nameId,
+            label: namesArray[i],
+            x: 0 * view.xScalingFactor,
+            y: i,
+            size: 1,
+            color: '#f00',
+          });
         }
-        for (let i = 0; i < regionsArray.length; ++i) { 
-           let regionId = "r"+i;
-           regionIds[regionsArray[i]] = regionId;
-           sig.graph.addNode({
-             id: regionId,
-             label: regionsArray[i],
-             x: 1 * view.xScalingFactor,
-             y: i * view.yScalingFactor,
-             size: 1,
-             color: '#00f',
-           });
+        for (let i = 0; i < regionsArray.length; ++i) {
+          let regionId = "r" + i;
+          regionIds[regionsArray[i]] = regionId;
+          sig.graph.addNode({
+            id: regionId,
+            label: regionsArray[i],
+            x: 2 * view.xScalingFactor,
+            y: i * view.yScalingFactor,
+            size: 1,
+            color: '#00f',
+          });
         }
-        for (let i = 0; i < segmentsArray.length; ++i) { 
-           let segmentId = "s"+i;
-           segmentIds[segmentsArray[i]] = segmentId;
-           sig.graph.addNode({
-             id: segmentId,
-             label: segmentsArray[i],
-             x: 2 * view.xScalingFactor,
-             y: i * view.yScalingFactor,
-             size: 1,
-             color: '#0f0',
-           });
+        for (let i = 0; i < segmentsArray.length; ++i) {
+          let segmentId = "s" + i;
+          segmentIds[segmentsArray[i]] = segmentId;
+          sig.graph.addNode({
+            id: segmentId,
+            label: segmentsArray[i],
+            x: 3 * view.xScalingFactor,
+            y: i * view.yScalingFactor,
+            size: 1,
+            color: '#0f0',
+          });
         }
-        for (let i = 0; i < filesArray.length; ++i) { 
-           let fileId = "f"+i;
-           fileIds[filesArray[i]] = fileId;
-           sig.graph.addNode({
-             id: fileId,
-             label: filesArray[i],
-             x: 3 * view.xScalingFactor,
-             y: i * view.yScalingFactor,
-             size: 1,
-             color: '#000',
-           });
+        for (let i = 0; i < filesArray.length; ++i) {
+          let fileId = "f" + i;
+          fileIds[filesArray[i]] = fileId;
+          sig.graph.addNode({
+            id: fileId,
+            label: filesArray[i],
+            x: 4 * view.xScalingFactor,
+            y: i * view.yScalingFactor,
+            size: 1,
+            color: '#000',
+          });
         }
         namesArray.map(nam => {
           let nameId = nameIds[nam];
@@ -461,7 +448,7 @@ window.onload = function() {
           let regionId = regionIds[nams[nam]];
           if (regionId === undefined) throw "Nonexistent region " + nams[nam] + " for name " + nam;
           sig.graph.addEdge({
-            id: nameId+'-'+regionId,
+            id: nameId + '-' + regionId,
             source: nameId,
             target: regionId,
           });
@@ -474,7 +461,7 @@ window.onload = function() {
           let segmentId = segmentIds[seg];
           if (segmentId === undefined) throw "Nonexistent segment " + seg + " for region " + reg;
           sig.graph.addEdge({
-            id: regionId+'-'+segmentId,
+            id: regionId + '-' + segmentId,
             source: regionId,
             target: segmentId,
           });
@@ -486,7 +473,7 @@ window.onload = function() {
           if (file === undefined) throw "Missing file for segment " + seg;
           let fileId = fileIds[file];
           sig.graph.addEdge({
-            id: segmentId+'-'+fileId,
+            id: segmentId + '-' + fileId,
             source: segmentId,
             target: fileId,
           });
@@ -529,8 +516,7 @@ window.onload = function() {
         }
         */
         sig.refresh();
-      }
-      else if (this.readyState == 4 && xmlHttp.status != 200) {
+      } else if (this.readyState == 4 && xmlHttp.status != 200) {
         toastr.error("unsuccessful: Http status " + xmlHttp.status);
       }
       $('#blocker').dialog('close');
@@ -552,32 +538,33 @@ window.onload = function() {
     sendObj.gnams = model.gnams;
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", "verify", true);
-    xmlHttp.onreadystatechange = function() { 
+    xmlHttp.onreadystatechange = function() {
       if (this.readyState == 4 && xmlHttp.status == 200) {
-	//2012-02-28 AKB - response text is XML with one line containing a JSON object instead of pure JSON, for some reason
+        //2012-02-28 AKB - response text is XML with one line containing a JSON object instead of pure JSON, for some reason
         //const responseObj = JSON.parse(xmlHttp.responseText);
         const responseArr = xmlHttp.responseText.split('\n');
-	let responseObj = null;
-	for (let i = 0; i < responseArr.length; ++i) {
-	  try {
-	    responseObj = JSON.parse(responseArr[i]);
-	    break;
-	  }
-	  catch(error) {continue;}
-	}
-	console.log(responseObj);
+        let responseObj = null;
+        console.log(responseArr);
+        for (let i = 0; i < responseArr.length; ++i) {
+           try {
+             responseObj = JSON.parse(responseArr[i]);
+             break;
+           } catch(error) {
+             console.log(error);
+             continue;
+           }
+        }
+        console.log(responseObj);
         if (false) {
           //parse/missing-data error handling block - to fill in
           return;
         }
-	if (responseObj.verifyStatus == 'success') {
-	  toastr.success("Verification successful");
+        if (responseObj.verifyStatus == 'success') {
+          toastr.success("Verification successful");
+        } else {
+          toastr.error("Verification unsuccessful");
         }
-	else {
-	  toastr.error("Verification unsuccessful");
-	}
-      }
-      else if (this.readyState == 4 && xmlHttp.status != 200) {
+      } else if (this.readyState == 4 && xmlHttp.status != 200) {
         toastr.error("Verify encountered server error: Http status " + xmlHttp.status);
       }
     }
@@ -602,18 +589,17 @@ window.onload = function() {
     sendObj.debug = model.debug;
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", "save", true);
-    xmlHttp.onreadystatechange = function() { 
+    xmlHttp.onreadystatechange = function() {
       if (this.readyState == 4 && xmlHttp.status == 200) {
-        //const responseObj = JSON.parse(xmlHttp.responseText);
+        const responseObj = JSON.parse(xmlHttp.responseText);
         if (false) {
           //parse/missing-data error handling block - to fill in
           $('#blocker').dialog('close');
           return;
         }
-        console.log(xmlHttp.responseText);
+        console.log(responseObj);
 	//TODO update the graph
-      }
-      else if (this.readyState == 4 && xmlHttp.status != 200) {
+      } else if (this.readyState == 4 && xmlHttp.status != 200) {
         toastr.error("Verify encountered server error: Http status " + xmlHttp.status);
       }
       $('#blocker').dialog('close');
@@ -623,7 +609,7 @@ window.onload = function() {
   }
 
   sig.bind('clickNode', function(e) {
-    const nodeIdPrefix = e.data.node.id.substring(0,1); //this method of determining node type is fragile - change when possible
+    const nodeIdPrefix = e.data.node.id.substring(0, 1); //this method of determining node type is fragile - change when possible
     if (nodeIdPrefix === 'f') return;
     $("#clicknode-dialog").data("node-id", e.data.node.id);
     $("#clicknode-dialog").data("node-label", e.data.node.label);
@@ -631,19 +617,22 @@ window.onload = function() {
     if (nodeIdPrefix === 'n') {
       $("#changeLinkBtn").text("Change Region");
       //document.getElementById("changelink-dialog").title = "Change Region";
-      $("#changelink-dialog").dialog({title: "Change Region"});
-    }
-    else if (nodeIdPrefix === 'r') {
+      $("#changelink-dialog").dialog({
+        title: "Change Region"
+      });
+    } else if (nodeIdPrefix === 'r') {
       $("#changeLinkBtn").text("Change Segment");
       //document.getElementById("changelink-dialog").title = "Change Segment";
-      $("#changelink-dialog").dialog({title: "Change Segment"});
-    }
-    else if (nodeIdPrefix === 's') {
+      $("#changelink-dialog").dialog({
+        title: "Change Segment"
+      });
+    } else if (nodeIdPrefix === 's') {
       $("#changeLinkBtn").text("Change File");
       //document.getElementById("changelink-dialog").title = "Change File";
-      $("#changelink-dialog").dialog({title: "Change File"});
-    }
-    else return; //this is an error case in the current design - node is not name, region, segment, or file - how to signal to the developers/users?
+      $("#changelink-dialog").dialog({
+        title: "Change File"
+      });
+    } else return; //this is an error case in the current design - node is not name, region, segment, or file - how to signal to the developers/users?
     $("#clicknode-dialog").dialog("open");
     /*$.contextMenu({
        selector: '#sigma-container',
@@ -680,14 +669,12 @@ window.onload = function() {
       nodeInfo.prefix = "n";
       nodeInfo.x = 0;
       nodeInfo.color = '#f00';
-    }
-    else if (type === "region") {
+    } else if (type === "region") {
       nodeInfo.modelField = "regs";
       nodeInfo.prefix = "r";
       nodeInfo.x = 1;
       nodeInfo.color = '#00f';
-    }
-    else if (type === "segment") {
+    } else if (type === "segment") {
       nodeInfo.modelField = "segs";
       nodeInfo.prefix = "s";
       nodeInfo.x = 2;
@@ -701,7 +688,7 @@ window.onload = function() {
     else {
       throw "Node type not valid: " + type;
     }
-    nodeInfo.nodes = sig.graph.nodes().filter(node => node.id.substring(0,1) === nodeInfo.prefix);
+    nodeInfo.nodes = sig.graph.nodes().filter(node => node.id.substring(0, 1) === nodeInfo.prefix);
     return nodeInfo;
   }
 
