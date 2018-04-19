@@ -720,6 +720,98 @@ window.onload = function() {
     sig.refresh();
   }
 
+  function respaceGraphNodes() {
+    /*
+     *rules:
+     *this function does not draw or delete any nodes or edges or use the model
+     *animate movements
+     *connected regions and segments should be in line; if there are multiple regions connected to a segment, line the regions' y-center up with the segment
+     *connected segments and files should be in line; if there are multiple segments connected to a file, line the segments' y-center up with the file
+     *connected names should be grouped by region, and in alphabetical order within each region, with the names centered about the region
+     *connected regions should be in alphabetical order
+     *unconnected elements should be at the bottom, below connected elements; should they have a defined order?
+     *
+     */
+
+    //get nodes that are connected and unconnected for the categories names, regions, segments; file nodes are always connected
+    const names = sig.graph.nodes().filter(n => 'n' === n.id.substring(0, 1));
+    const regions = sig.graph.nodes().filter(n => 'r' === n.id.substring(0, 1));
+    const segments = sig.graph.nodes().filter(n => 's' === n.id.substring(0, 1));
+    const files = sig.graph.nodes().filter(n => 'f' === n.id.substring(0, 1));
+    const edges = sig.graph.edges();
+    const connectedNames = names.filter(n => edges.filter(e => e.source === n.id).length > 0);
+    const connectedRegions = regions.filter(n => edges.filter(e => e.source === n.id).length > 0);
+    const connectedSegments = segments.filter(n => edges.filter(e => e.source === n.id).length > 0);
+    const unconnectedNames = names.filter(n => connectedNames.map(n2 => n2.id).indexOf(n.id) === -1);
+    const unconnectedRegions = regions.filter(n => connectedNames.map(n2 => n2.id).indexOf(n.id) === -1);
+    const unconnectedSegments = segments.filter(n => connectedNames.map(n2 => n2.id).indexOf(n.id) === -1);
+
+    //this map doesn't have entries for regions with no names connected
+    const regionIdsToNames = names.reduce(
+      (rv, node) => {
+        const outgoingEdgeWrapped = edges.filter(e => e.source === node.id);
+	if (outgoingEdgeWrapped.length > 0) {
+          const targetId = outgoingEdgeWrapped[0].target;
+          (rv[targetId] = rv[targetId] || []).push(node);
+	}
+	return rv;
+      }, {}
+    );
+    //this map doesn't have entries for segments with no regions connected
+    const segmentIdsToRegions = regions.reduce(
+      (rv, node) => {
+        const outgoingEdgeWrapped = edges.filter(e => e.source === node.id);
+	if (outgoingEdgeWrapped.length > 0) {
+          const targetId = outgoingEdgeWrapped[0].target;
+          (rv[targetId] = rv[targetId] || []).push(node);
+	}
+	return rv;
+      }, {}
+    );
+    //there are no files without segments connected
+    const fileIdsToSegments = segments.reduce(
+      (rv, node) => {
+        const outgoingEdgeWrapped = edges.filter(e => e.source === node.id);
+	if (outgoingEdgeWrapped.length > 0) {
+          const targetId = outgoingEdgeWrapped[0].target;
+          (rv[targetId] = rv[targetId] || []).push(node);
+	}
+	return rv;
+      }, {}
+    );
+
+    const minYStep = view.yScalingFactor;
+    //start by spacing file nodes one step apart
+    for (let i = 0; i < files.length; ++i) {
+      files[i].target_y = minYStep * i;
+    }
+    //next, space segment nodes one step apart, first grouped by 
+
+    /*
+    const minYStep = view.yScalingFactor;
+    const maxYBound = minYStep * names.length;
+    
+    //respace name nodes - evenly spaced, connected nodes first
+    let connectedNamesOrdered = [];
+    const connectedNamesGroupedByRegion = connectedNames.reduce(
+      (rv, name) => {
+	const regionId = edges.filter(e => e.source === name.id)[0].target;
+        (rv[regionId] = rv[regionId] || []).push(name);
+        return rv;
+      }, {}
+    );
+    Object.keys(connectedNamesGroupedByRegion).sort().forEach(regionId => connectedNamesOrdered = connected.concat(namesGroupedByRegion[region]));
+    for (let i = 0; i < );
+
+    //respace region nodes - align connected region nodes with the y-centers of their groups, then divide the remaining space between the last region and the 
+    //max Y Bound evenly between the unconnected region nodes
+
+    //respace segment nodes - align connected segment nodes with the y-centers of their groups, then divide the remainig space between the last segment and the
+    //max Y Bound evenly between the unconnected segment nodes
+	  
+    */
+  }
+
   sig.bind('clickNode', function(e) {
     const nodeIdPrefix = e.data.node.id.substring(0, 1); //this method of determining node type is fragile - change when possible
     if (nodeIdPrefix === 'f') return;
@@ -738,11 +830,17 @@ window.onload = function() {
       $("#changelink-dialog").dialog({
         title: "Change Segment"
       });
+      Object.keys(model.regs[e.data.node.label]).forEach(attribute => {
+	$("#clicknode-dialog p").append(attribute + ": " + model.regs[e.data.node.label][attribute] + "<br>");
+      });
     } else if (nodeIdPrefix === 's') {
       $("#changeLinkBtn").text("Change File");
       //document.getElementById("changelink-dialog").title = "Change File";
       $("#changelink-dialog").dialog({
         title: "Change File"
+      });
+      Object.keys(model.segs[e.data.node.label]).forEach(attribute => {
+	$("#clicknode-dialog p").append(attribute + ": " + model.segs[e.data.node.label][attribute] + "<br>");
       });
     } else return; //this is an error case in the current design - node is not name, region, segment, or file - how to signal to the developers/users?
     $("#clicknode-dialog").dialog("open");
