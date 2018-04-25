@@ -741,6 +741,11 @@ window.onload = function() {
     sig.refresh();
   }
 
+  /* AKB 2018-04-25: This function is incomplete and should not be called in its current state.
+   * The original intent was to provide a function that could be called after every node or edge change in the graph to respace the nodes into an optimal layout,
+   * but my initial attempts did not properly handle laying out partially-complete states with various disconnected subgraphs.
+   * I've left some of my code here in case it's helpful later on.
+   */
   function respaceGraphNodes() {
     /*
      *rules:
