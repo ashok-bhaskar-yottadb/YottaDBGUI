@@ -46,17 +46,38 @@ window.onload = function() {
     dialogClass: "no-close",
     closeOnEscape: false,
   });
+	
+  //initialize menus
+
+  $('.menu').menu().hide();
 
 
   //initialize the graph - does this have to be done here with a function that contains a POST request, or can the necessary data be sent without the POST request in this function?
   getMap();
   //TODO how to prevent the rest of the application from being operational until the callback in getMap finishes, and only if the success branch is hit - getMap() should be effectively synchronous
   //-one part is using a "loading" blocker while getMap and its callback are running, but that alone doesn't stop the application on failure
-
-
+	
+	
   document.getElementById("addNodeBtn").onclick = function(e) {
     $("#addnode-dialog").dialog("open");
   }
+
+  //AKB 2018-04-25: this is different from the other buttons currently
+  //I looked into trying to replicate this functionality without the jQuery selector + button() invocation,
+  //but it looks significantly more complicated to detect a click outside of an element
+  //see https://stackoverflow.com/questions/152975/how-do-i-detect-a-click-outside-an-element/3028037#3028037
+  $("#changeTemplateMenuBtn").button().click(function() {
+    let menu = $('#template-node-type-menu');
+    menu.show().position({
+      my: 'left bottom',
+      at: 'left top',
+      of: this,
+    });
+    $(document).one('click', function() {
+      menu.hide(); //AKB 2018-04-25: this doesn't hide the menu as intended when the click is in the sigma container div
+    });
+    return false; //see https://gist.github.com/itzg/3956710 for why this is needed (to avoid having the click registration above invoked)
+  });
 
   document.getElementById("deleteNodeBtn").onclick = function(e) {
     $("#deletenode-dialog").dialog("open");
@@ -75,7 +96,7 @@ window.onload = function() {
     //when checking against existing nodes, how should it handle case sensitivity?
     //case sensitivity is different for different node types e.g. regions is insensitive, files are not - also, it might depend based on the OS - Bhaskar says files are case-sensitive across OSes
     //need to check specifics
-    let nodeType = document.getElementById("addNodeTypeBox").value; //TODO sanitize this?, and other user input - here, on the server, or both? -check if multi-sanitization is okay/doesn't alter the semantic content
+    let nodeType = document.getElementById("addNodeTypeBox").value; //TODO sanitize this?, and other user input - here, on the server, or both? -check if multi-sanitization is okay/doesn't alter the semantic content (idempotency?)
     let nodeNameString = document.getElementById("addNodeNameStringInput").value; //TODO sanitize this?
     if (nodeNameString === "") {
       toastr.error("Node name string cannot be empty");
