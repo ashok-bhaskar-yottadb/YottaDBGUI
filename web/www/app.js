@@ -870,31 +870,6 @@ window.onload = function() {
       });
     } else return; //this is an error case in the current design - node is not name, region, segment, or file - how to signal to the developers/users?
     $("#clicknode-dialog").dialog("open");
-    /*$.contextMenu({
-       selector: '#sigma-container',
-       trigger: 'left',
-       build: function($trigger, e2) {
-         return {
-           callback: function(){},
-           items: {
-             menuItem: {name: "My item"}
-           }
-         };
-       }
-    });*/
-    /*$.contextMenu({
-      selector: '#sigma-container', 
-      trigger: 'left',
-      callback: function(key, options) {
-        var m = "clicked: " + key;
-        window.console && console.log(m) || alert(m); 
-        console.log("End of context menu callback");
-      },
-      items: {
-        "delete": {name: "Delete"},
-      }
-    });*/
-    //window.prompt("Text here");
   });
 
   function getNodeInfoOfType(type) {
@@ -936,46 +911,6 @@ window.onload = function() {
     return s1.toUpperCase() === s2.toUpperCase();
   }
 
-  //context menu
-  /*  $.contextMenu({
-        selector: '#sigma-container', 
-        trigger: 'left',
-        callback: function(key, options) {
-            var m = "clicked: " + key;
-            window.console && console.log(m) || alert(m); 
-            console.log("End of context menu callback");
-        },
-        items: {
-            "delete": {name: "Delete"},
-        }
-    });
-
-    $.contextMenu({
-        selector: '#sigma-container', 
-        build: function($trigger, e) {
-            console.log(e);
-            // this callback is executed every time the menu is to be shown
-            // its results are destroyed every time the menu is hidden
-            // e is the original contextmenu event, containing e.pageX and e.pageY (amongst other data)
-            return {
-                trigger: 'left',
-                callback: function(key, options) {
-                    var m = "clicked: " + key;
-                    window.console && console.log(m) || alert(m); 
-                },
-                items: {
-                    "edit": {name: "Edit", icon: "edit"},
-                    "cut": {name: "Cut", icon: "cut"},
-                    "copy": {name: "Copy", icon: "copy"},
-                    "paste": {name: "Paste", icon: "paste"},
-                    "delete": {name: "Delete", icon: "delete"},
-                    "sep1": "---------",
-                    "quit": {name: "Quit", icon: function($element, key, item){ return 'context-menu-icon context-menu-icon-quit'; }}
-                }
-            };
-        }
-    });
-  */
 }
 
 /*alternate UI options:
