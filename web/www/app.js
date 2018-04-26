@@ -9,8 +9,8 @@
 
 window.onload = function() {
 
-  //should I try to grab the initial map data when the server sends the html data, or is doing it in a separate toplevel request in window.onload an okay program flow?
-  //activate node hover when mouse is over the label and not the node?
+  //should I try to grab the initial map data when the server sends the html data, or is doing it in a separate toplevel request (i.e. the call to getMap()) in window.onload an okay program flow?
+  //is it possible to activate the "hover over node" state when mouse is over the text label in addition to or instead of when the mouse is over the node proper?
 
 
   //Global Vars
@@ -28,11 +28,12 @@ window.onload = function() {
   });
   sig.settings('labelThreshold', 1);
 
-  var model = {};
-  var view = {
+  var model = {}; //all global directory state data is saved in this object
+  var view = {  //this object is for the storage of data that is used to describe the presentation of the model data, such as x/y scaling factors
     xScalingFactor: 1,
     yScalingFactor: 1,
   };
+    //in every user operation that might produce a global directory state change, I've separated the code into "update model" first and then "update view"
 
 
   //initialize dialogs so that the blocker dialog can be used in getMap()
@@ -52,17 +53,17 @@ window.onload = function() {
   $('.menu').menu().hide();
 
 
-  //initialize the graph - does this have to be done here with a function that contains a POST request, or can the necessary data be sent without the POST request in this function?
+  //request global directory data from the server and initialize the graph - does this have to be done here with a function that contains a separate xmlhttp request, or can the necessary data be obtained without needing the request in this function?
   getMap();
-  //TODO how to prevent the rest of the application from being operational until the callback in getMap finishes, and only if the success branch is hit - getMap() should be effectively synchronous
-  //-one part is using a "loading" blocker while getMap and its callback are running, but that alone doesn't stop the application on failure
+  //TODO prevent the application from being operational if getMap() hits the failure branch and exits - the behaviors of other operations like adding nodes, verification, and saving have not been tested without the model data present
+  //-the "Loading" blocker dialog makes getMap() effectively synchronous by blocking user input while getMap() and its callback are running, but that alone doesn't stop the application on failure
 	
 	
   document.getElementById("addNodeBtn").onclick = function(e) {
     $("#addnode-dialog").dialog("open");
   }
 
-  //AKB 2018-04-25: this is different from the other buttons currently
+  //AKB 2018-04-25: this button is different from the other buttons currently
   //I looked into trying to replicate this functionality without the jQuery selector + button() invocation,
   //but it looks significantly more complicated to detect a click outside of an element
   //see https://stackoverflow.com/questions/152975/how-do-i-detect-a-click-outside-an-element/3028037#3028037
@@ -91,26 +92,15 @@ window.onload = function() {
     $('#changelink-dialog').dialog('open');
   }
 
-  //TODO: separate UI elements for adding name/region/segment(/file)?
   document.getElementById("addNodeConfirmBtn").onclick = function(e) {
-    //when checking against existing nodes, how should it handle case sensitivity?
     //case sensitivity is different for different node types e.g. regions is insensitive, files are not - also, it might depend based on the OS - Bhaskar says files are case-sensitive across OSes
-    //need to check specifics
     let nodeType = document.getElementById("addNodeTypeBox").value; //TODO sanitize this?, and other user input - here, on the server, or both? -check if multi-sanitization is okay/doesn't alter the semantic content (idempotency?)
     let nodeNameString = document.getElementById("addNodeNameStringInput").value; //TODO sanitize this?
     if (nodeNameString === "") {
       toastr.error("Node name string cannot be empty");
       return;
     }
-    /*
-    let nodes = sig.graph.nodes();
-    let regionNodes = nodes.filter(node => node.id.substring(0,1) === "r");
-    if (regionNodes.map(node => node.label).includes(newRegion)) {
-      toastr.error("Client-side error: region " + newRegion + " already exists");
-      return;
-    }
-    */
-    //can this be avoided entirely, e.g. by having different UI dialogs and functions for adding names, regions, and segments?
+    //can this code to get node info be avoided entirely, e.g. by having different UI dialogs and functions for adding names, regions, and segments?
     let nodeInfo = null;
     try {
       nodeInfo = getNodeInfoOfType(nodeType);
@@ -128,12 +118,12 @@ window.onload = function() {
       }
       model.nams[nodeNameString] = "";
     } else if (nodeInfo.modelField === "regs") {
-      if (Object.keys(model.regs).map(r => r.toUpperCase()).includes(nodeNameString.toUpperCase())) { //TODO encapsulate
+      if (Object.keys(model.regs).map(r => r.toUpperCase()).includes(nodeNameString.toUpperCase())) { //TODO encapsulate case-insensitive relationship
         toastr.error('Region ' + nodeNameString + ' already exists');
         return;
       }
-      //TODO does property FILE_NAME in region template require special handling?
-      //TODO is it possible for a template to have DYNAMIC_SEGMENT (region) or FILE_NAME (segment)? if so, does this code still work? (not optimally - the region/segment won't follow the template)
+      //TODO does property FILE_NAME in region template require special handling? check
+      //TODO is it possible for a template to have DYNAMIC_SEGMENT (region template) or FILE_NAME (segment template)? if so, does this code still work?
       model.regs[nodeNameString] = {};
       model.regs[nodeNameString].DYNAMIC_SEGMENT = "";
       Object.keys(model.tmpreg).map(propertyName => {
@@ -142,7 +132,7 @@ window.onload = function() {
 	}
       });
     } else if (nodeInfo.modelField === "segs") {
-      if (Object.keys(model.segs).map(s => s.toUpperCase()).includes(nodeNameString.toUpperCase())) { //TODO encapsulate
+      if (Object.keys(model.segs).map(s => s.toUpperCase()).includes(nodeNameString.toUpperCase())) { //TODO encapsulate case-insensitive relationship
         toastr.error('Segment ' + nodeNameString + ' already exists');
         return;
       }
@@ -163,7 +153,7 @@ window.onload = function() {
           model.segs[nodeNameString][propertyName] = segmentTemplate[propertyName];
 	}
       });
-    } else throw "nodeInfo.modelField not recognized: " + nodeInfo.modelField;
+    } else throw "nodeInfo.modelField not recognized: " + nodeInfo.modelField; //should this be a toastr error and return instead?
 
     $("#addnode-dialog").dialog("close");
 
@@ -171,9 +161,9 @@ window.onload = function() {
     const nodes = nodeInfo.nodes;
     const len = nodes.length;
     const idMaxNumber = nodes.map(node => parseInt(node.id.substring(1), 10)).reduce((max, current) => Math.max(max, current), -1);
-    //find the maximum numeric portion among node IDs (which are all non-negative), defaulting to -1 if no nodes are present
+      //find the maximum numeric portion among node IDs (which are all non-negative), defaulting to -1 if no nodes are present
     sig.graph.addNode({
-      id: nodeInfo.prefix + (idMaxNumber + 1), //"[n/r/s/f]"+len will result in non-unique id error if deleting nodes doesn't adjust remaining ids such that the number portion is never >= the number of nodes
+      id: nodeInfo.prefix + (idMaxNumber + 1), 
       label: nodeNameString,
       x: nodeInfo.x * view.xScalingFactor,
       y: ((nodeInfo.modelField === "nams") ? len : len * view.yScalingFactor), //will result in position overlap error if deleting nodes doesn't adjust y-position of existing nodes to make them compact
@@ -189,7 +179,7 @@ window.onload = function() {
     //if deleting a segment node would remove the last link to a file node, that file node needs to be deleted
     let linkedFileNodeLabel = undefined; //initialized later in segment node handling block
     //update model
-    //this way of determining node type is fragile - should try to correct it when possible
+    //this way of determining node type is fragile - should try to change it when possible
     const nodeIdPrefix = nodeToDeleteId.substring(0, 1);
     if (nodeIdPrefix === 'n') {
       delete model.nams[nodeToDeleteLabel];
@@ -232,14 +222,6 @@ window.onload = function() {
         nodes: nodesOfType.map(node => node.id),
       }
     );
-    /*sig.graph.addNode({
-      id: "r"+len, //will result in non-unique id error if deleting nodes doesn't adjust remaining ids such that the number portion is never >= the number of nodes - update - changing node IDs without changing edge IDs is a bad idea with current design
-      label: newRegion,
-      x: 1,
-      y: len, //will result in position overlap error if deleting nodes doesn't adjust y-position of existing nodes to make them compact
-      size: 1,
-      color: '#00f',
-    });*/
 
     //if linked file node label is defined and there are no more links to that file node after deleting the segment node, delete the file node
     if (undefined !== linkedFileNodeLabel && "" !== linkedFileNodeLabel) {
@@ -258,7 +240,7 @@ window.onload = function() {
   }
 
   document.getElementById("changeLinkConfirmBtn").onclick = function(e) {
-    //two cases for name-region and region-segment - linked node exists, or linked node doesn't yet exist - the latter requires refactoring the current add-node code (2018-01-30)
+    //two cases for name-region and region-segment - linked node exists, or linked node doesn't yet exist - the latter requires refactoring the current add-node code (2018-01-30) and is not currently implemented
     //for now - only connect to existing nodes (segment-file does not have this limitation)
     const linkTargetLabel = document.getElementById("changeLinkInput").value; //TODO sanitize this? not sure if necessary
     const thisNodeId = $("#clicknode-dialog").data("node-id"); //I believe this way of grabbing the current/source node is safe
@@ -368,8 +350,7 @@ window.onload = function() {
     sig.refresh();
   }
 
-  //can GET get local variables from M? or can POST only do so
-  //make this synchronous? sync seems to be deprecated(?), and generally bad practice - currently using blocker dialog to lock out user interaction
+  //currently using blocker dialog to lock out user interaction - forced synchronous
   //this function expects a non-interim global directory state, i.e. no unconnected name/region/segment/file nodes 
   function getMap() {
     $('#blocker').dialog('open');
@@ -409,117 +390,7 @@ window.onload = function() {
 	model.inst = responseObj.inst;
 
 	drawGraph(nams, regs, segs);
-        //const namesArray = Object.keys(nams); //TODO: true immutability?
-	/*const namesArray = Object.values(
-		             Object.keys(nams).reduce((rv, nam) => {(rv[nams[nam]] = rv[nams[nam]] || []).push(nam); return rv;}, {}) //group names by region
-                           ).reduce((xs, ys) => xs.concat(ys), []); //group-by returns map of regions to arrays of names; concatenate the arrays */
-	/*moved to function drawGraph()
-        let namesArray = [];
-        const namesGroupedByRegion = Object.keys(nams).reduce(
-	  (rv, nam) => {
-	    (rv[nams[nam]] = rv[nams[nam]] || []).push(nam);
-	    return rv;
-	  }, {}
-	);
-        Object.keys(namesGroupedByRegion).sort().forEach(region => namesArray = namesArray.concat(namesGroupedByRegion[region]));
-	  //populate namesArray by region alphabetical order, and in name alphabetical order within each region
-        const regionsArray = Object.keys(regs);
-        const segmentsArray = Object.keys(segs);
-        //TODO: make sure that region/segment parameter names indeed show up on the JS side in uppercase
-        //is the filter undefined operation here redundant? (i.e. if undefined segment-file associations are being treated as an error and handled elsewhere, like in the edge-drawing code in this function)
-        const filesArray = Array.from(new Set(segmentsArray.map(seg => segs[seg].FILE_NAME))).filter(file => file != undefined) //Array.from(new Set(Object.values(segFileMap)));
-        view.xScalingFactor = Math.max(1, namesArray.length / 3)
-        view.yScalingFactor = Math.max(1, namesArray.length / regionsArray.length);
-        const nameIds = {}; //cannot use name/region/etc. strings as sigma element ids due to possible duplicates
-        const regionIds = {};
-        const segmentIds = {};
-        const fileIds = {};
-        for (let i = 0; i < namesArray.length; ++i) {
-          let nameId = "n" + i;
-          nameIds[namesArray[i]] = nameId;
-          sig.graph.addNode({
-            id: nameId,
-            label: namesArray[i],
-            x: 0 * view.xScalingFactor,
-            y: i,
-            size: 1,
-            color: '#f00',
-          });
-        }
-        for (let i = 0; i < regionsArray.length; ++i) {
-          let regionId = "r" + i;
-          regionIds[regionsArray[i]] = regionId;
-          sig.graph.addNode({
-            id: regionId,
-            label: regionsArray[i],
-            x: 2 * view.xScalingFactor,
-            y: i * view.yScalingFactor,
-            size: 1,
-            color: '#00f',
-          });
-        }
-        for (let i = 0; i < segmentsArray.length; ++i) {
-          let segmentId = "s" + i;
-          segmentIds[segmentsArray[i]] = segmentId;
-          sig.graph.addNode({
-            id: segmentId,
-            label: segmentsArray[i],
-            x: 3 * view.xScalingFactor,
-            y: i * view.yScalingFactor,
-            size: 1,
-            color: '#0f0',
-          });
-        }
-        for (let i = 0; i < filesArray.length; ++i) {
-          let fileId = "f" + i;
-          fileIds[filesArray[i]] = fileId;
-          sig.graph.addNode({
-            id: fileId,
-            label: filesArray[i],
-            x: 4 * view.xScalingFactor,
-            y: i * view.yScalingFactor,
-            size: 1,
-            color: '#000',
-          });
-        }
-        namesArray.map(nam => {
-          let nameId = nameIds[nam];
-          //error/exception handling if for some reason the name-region mapping contains a nonexistent region
-          let regionId = regionIds[nams[nam]];
-          if (regionId === undefined) throw "Nonexistent region " + nams[nam] + " for name " + nam;
-          sig.graph.addEdge({
-            id: nameId + '-' + regionId,
-            source: nameId,
-            target: regionId,
-          });
-        });
-        regionsArray.map(reg => {
-          let regionId = regionIds[reg];
-          //error/exception handling if for some reason the region-segment mapping contains a nonexistent segment or if the segment is missing
-          let seg = regs[reg].DYNAMIC_SEGMENT;
-          if (seg === undefined) throw "Missing segment for region " + reg;
-          let segmentId = segmentIds[seg];
-          if (segmentId === undefined) throw "Nonexistent segment " + seg + " for region " + reg;
-          sig.graph.addEdge({
-            id: regionId + '-' + segmentId,
-            source: regionId,
-            target: segmentId,
-          });
-        });
-        segmentsArray.map(seg => {
-          let segmentId = segmentIds[seg];
-          //error/exception handling if for some region a segment is missing an associated file (There won't be a nonexistent file here since the file list is obtained by grabbing all segment FILE_NAME values)
-          let file = segs[seg].FILE_NAME;
-          if (file === undefined) throw "Missing file for segment " + seg;
-          let fileId = fileIds[file];
-          sig.graph.addEdge({
-            id: segmentId + '-' + fileId,
-            source: segmentId,
-            target: fileId,
-          });
-        });
-        sig.refresh();
-	*/
+
       } else if (this.readyState == 4 && xmlHttp.status != 200) {
         toastr.error("unsuccessful: Http status " + xmlHttp.status);
       }
@@ -529,8 +400,8 @@ window.onload = function() {
     xmlHttp.send('placeholder payload'); //can there be no string?
   }
 
-  //don't think this needs forced synchrony - just Save function
-  //TODO print proper error message to screen
+  //don't think this needs forced synchrony
+  //TODO print specific verification error messages to screen
   document.getElementById('verifyBtn').onclick = function(e) {
     var sendObj = {};
     sendObj.nams = model.nams;
@@ -544,7 +415,8 @@ window.onload = function() {
     xmlHttp.open("POST", "verify", true);
     xmlHttp.onreadystatechange = function() {
       if (this.readyState == 4 && xmlHttp.status == 201) {
-        //2012-02-28 AKB - response text is XML with one line containing a JSON object instead of pure JSON, for some reason
+        //2018-02-28 AKB - response text is XML with one line containing a JSON object instead of pure JSON, for some reason
+	  //2018-04-26 AKB - not sure if above note still applies: Christopher Edwards's fixes might mean this can be modified to parse the entire response text to JSON instead of looping through
         //const responseObj = JSON.parse(xmlHttp.responseText);
         const responseArr = xmlHttp.responseText.split('\n');
         let responseObj = null;
@@ -558,7 +430,7 @@ window.onload = function() {
              continue;
            }
         }
-        console.log(responseObj);
+        console.log(responseObj); //debugging code - remove when no longer needed
         if (false) {
           //parse/missing-data error handling block - to fill in
           return;
@@ -643,8 +515,7 @@ window.onload = function() {
       //populate namesArray by region alphabetical order, and in name alphabetical order within each region
     const regionsArray = Object.keys(regs);
     const segmentsArray = Object.keys(segs);
-    //TODO: make sure that region/segment parameter names indeed show up on the JS side in uppercase
-    //is the filter undefined operation here redundant? (i.e. if undefined segment-file associations are being treated as an error and handled elsewhere, like in the edge-drawing code in this function)
+    //is the filter undefined test here redundant? (i.e. if undefined segment-file associations are being treated as an error and handled elsewhere, like in the edge-drawing code in this function)
     const filesArray = Array.from(new Set(segmentsArray.map(seg => segs[seg].FILE_NAME))).filter(file => file != undefined && file !== "") //Array.from(new Set(Object.values(segFileMap)));
     view.xScalingFactor = Math.max(1, namesArray.length / 3)
     view.yScalingFactor = Math.max(1, namesArray.length / regionsArray.length);
