@@ -784,22 +784,17 @@ window.onload = function() {
 
 }
 
-/*alternate UI options:
+/*UI options:
 click button outside of graph to bring up "add" prompt, with dropdown for node type and input field for text (jQuery UI?)
 click node for info prompt, with "delete" button inside, and also "connect to region" for names, "connect to segment" for regions (and maybe also "connect to name")
 -dropdown or text entry?
 */
 
-//what happens if the connection terminates mid-way through editing? what will happen on reload?
-//-disconnection should quit without saving on the server, I think
+//how to handle asynchrony/changes made between requesting a verify/save and getting a success/fail response from the server?
+//-forced synchrony for saves - lock out user input - still doesn't account for the user modifying the JS code and sending a request when it otherwise wouldn't happen, or two users trying to save at the same time, but that's on the users for now
 
-//don't do a round trip on every add/delete - only on verify or save
-//-in that case - diffing JS state with M state and handling spanning regions?
-//what is the state of GDE after successful/unsuccessful verify, save?
-//-how to handle asynchrony/changes made between requesting a verify/save and getting a success/fail response from the server - force synchrony?
-
-//M mode vs UTF-8 mode? TODO (defer until after prototype?)
-//make sure on the M side to allow only one connection after startup, and only keep-alive connections
+//M mode vs UTF-8 mode? TODO
+//make sure on the M side to allow only one connection after startup, and only keep-alive connections? This might not be possible
 
 //differences between empty string and no value for GDE locals?
 
@@ -819,32 +814,24 @@ click node for info prompt, with "delete" button inside, and also "connect to re
 //
 //what is nams("%Y*")="default"? (save route)
 
-//need to separate model and view code
+//server uses globals for scratch space - this can't happen in production
 
-//DataBallet uses globals for scratch space - this can't happen in production
-//simply convert DataBallet globals to locals? -changed TMP, CACHE, and SESSION (there might be more) - stopping DataBallet was abnormal - UI displayed map for original GLD, failed to display when switching to acct.gld - need to figure out why
-
-//TODO clean stop, accept only one connection (still applicable now that we know keepalive is impossible?), template modification (JS side), save/verify, changes to GDE - where do they get saved? (-work locally now, merge into YottaDB repo later), load and test more glds
-//TODO better handling of large numbers of graph nodes
+//TODO clean server stop, accept only one connection (still applicable now that we know keepalive is impossible?), template modification (JS side), changes to GDE.m - which repository? should there be a separate GDE.m for the GDE GUI, or should it use the main GDE.m?
 //TODO better graph organization - what algorithm? minimize total line distance? minimize sum of squares of line distances? group by names by region? re-render button for simplifying graph after adding or deleting nodes and/or re-render on add/delete?
 //-region/segment/file spacing scaling factor? on draw/add/delete events for non-name nodes
 //-also an x-scaling factor
-//-animation?
-//Option for dealing with debugging code that writes to globals - provide an extended reference i.e. pass in a separate directory and use that for debugging
+//Option for dealing with debugging code that writes to M globals - provide an extended reference i.e. pass in a separate directory and use that for the debugging globals
 //
-//GETOUT^GDEEXIT when connection closes?
+//GETOUT^GDEEXIT necessary at all?
 //
-//TODO convert added regions/segments to uppercase in the client side add node function, or display an error if user attempts to enter any lowercase text
-//TODO implement behavior for saving an incorrect state (specific verification error)
-//TODO empty string file node appears when saving a valid(?) directory state where a segment does not have a file - early quit from change link function? when attempting to change that link to empty string via the dialog, the change link dialog closes but not the info dialog
-//-should saving a segment without a file/with an empty string file name be prevented?
+//TODO convert added regions/segments to uppercase in the client side add node function, or instead display an error if user attempts to enter any lowercase text
+//TODO implement behavior for verifying/saving an incorrect state (specific verification error)
+//TODO should saving a segment without a file/with an empty string file name be prevented?
 //TODO remove cdnjs script download dependencies
-//TODO animations, more intelligent spacing (i.e. keeping connected regions and segments in line horizontally) 
+//TODO more intelligent spacing (i.e. keeping connected regions and segments in line horizontally) 
 //
 //possible upgrade: Fable (F#) or ReasonML+BuckleScript (OCaml) conversion - might help with type safety and establishing invariant relationships
 //
 //maybe GDE issue? - can submit a variable set that passes verification but not saving (e.g. lowercase regions/segments)
 //
-//TODO file node spacing bug, invalid range problem (and other missing checks)
-//
-//for informing users of global vars used by the server - either document the variables that get overwritten (is ^DD from _WHOME.m one of them?), or create a second gld parameter that can be passed in for the server operation globals
+//TODO invalid range A>B problem (and other missing checks in GDEPARSE)
